@@ -30,6 +30,18 @@ app.get("/api/persons", (request, response) => {
   response.json(persons);
 });
 
+app.get("/api/persons/:id", (request, response) => {
+    const id = Number(request.params.id)
+    const person = persons.find(person => person.id === id);
+
+    if(person){
+        response.json(person);
+    }
+    else{
+        response.status(404).json({status_code: 404, message: "Not Found"})
+    }
+})
+
 app.get("/api/info", (request, response) => {
     const count = persons.length;
     const date = new Date();
