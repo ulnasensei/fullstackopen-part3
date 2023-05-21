@@ -28,7 +28,7 @@ app.get("/api/persons", (request, response) => {
 });
 
 app.get("/api/persons/:id", (request, response) => {
-  const id = Number(request.params.id);
+  const id = request.params.id;
   Person.findById(id)
     .then((person) => response.json(person))
     .catch((error) =>
@@ -38,7 +38,6 @@ app.get("/api/persons/:id", (request, response) => {
 
 app.post("/api/persons", (request, response) => {
   const { name, number } = request.body;
-  const id = getRandomID();
   if (!number) {
     response.status(400).json({ error: "number is required." });
     return;
