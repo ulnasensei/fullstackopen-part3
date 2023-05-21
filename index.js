@@ -1,4 +1,4 @@
-require('dotenv').config()
+require("dotenv").config();
 const express = require("express");
 const morgan = require("morgan");
 const cors = require("cors");
@@ -8,7 +8,7 @@ const Person = require("./models/person");
 app.use(express.json());
 app.use(cors());
 
-app.use(express.static('build'))
+app.use(express.static("build"));
 
 morgan.token("body", function (req, res) {
   return JSON.stringify(req.body);
@@ -29,13 +29,11 @@ app.get("/api/persons", (request, response) => {
 
 app.get("/api/persons/:id", (request, response) => {
   const id = Number(request.params.id);
-  const person = persons.find((person) => person.id === id);
-
-  if (person) {
-    response.json(person);
-  } else {
-    response.status(404).json({ status_code: 404, message: "Not Found" });
-  }
+  Person.findById(id)
+    .then((person) => response.json(person))
+    .catch((error) =>
+      response.status(404).json({ status_code: 404, message: "Not Found" })
+    );
 });
 
 app.post("/api/persons", (request, response) => {
