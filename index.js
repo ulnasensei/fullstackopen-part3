@@ -5,11 +5,11 @@ const cors = require("cors");
 const app = express();
 const Person = require("./models/person");
 
+app.use(express.static("build"));
 app.use(express.json());
 app.use(cors());
 
-app.use(express.static("build"));
-
+// logger middleware
 morgan.token("body", function (req, res) {
   return JSON.stringify(req.body);
 });
@@ -21,54 +21,69 @@ function getRandomID(max = 10000) {
   return Math.floor(Math.random() * max);
 }
 
-app.get("/api/persons", (request, response) => {
-  Person.find({}).then((people) => {
-    response.json(people);
-  });
+app.get("/api/persons", (request, response, next) => {
+  Person.find({})
+    .then((people) => {
+      response.json(people);
+    })
+    .catch((error) => next(error));
 });
 
-app.get("/api/persons/:id", (request, response) => {
+app.get("/api/persons/:id", (request, response, next) => {
   const id = request.params.id;
   Person.findById(id)
-    .then((person) => response.json(person))
-    .catch((error) =>
-      response.status(404).json({ status_code: 404, message: "Not Found" })
-    );
+    .then((person) => {
+      if (person) response.json(person);
+      else {
+        response.status(404).end();
+      }
+    })
+    .catch((error) => next(error));
 });
 
-app.post("/api/persons", (request, response) => {
+app.post("/api/persons", (request, response, next) => {
   const { name, number } = request.body;
   if (!number) {
-    response.status(400).json({ error: "number is required." });
-    return;
+    return response.status(400).json({ error: "number is required." });
   }
   if (!name) {
-    response.status(400).json({ error: "name is required." });
-    return;
+    return response.status(400).json({ error: "name is required." });
   }
-  //   if (persons.find((person) => person.name === name)) {
-  //     response.status(400).json({ error: "name must be unique." });
-  //     return;
-  //   }
-  const person = new Person({
+  const personObj = {
     name: name,
     number: number,
-  });
-  person.save().then((result) => {
-    response.status(201).json(result);
+  };
+  Person.find({ name: name }).then((result) => {
+    if (result.length)
+      return response.status(400).json({ error: "name must be unique." });
+    const person = new Person(personObj);
+    person
+      .save()
+      .then((result) => {
+        response.status(201).json(result);
+      })
+      .catch((error) => next(error));
   });
 });
 
-app.delete("/api/persons/:id", (request, response) => {
-  const id = Number(request.params.id);
-  const person = persons.find((person) => person.id === id);
+app.put("/api/persons/:id", (request, response, next) => {
+  const { name, number } = request.body;
 
-  if (person) {
-    persons = persons.filter((person) => person.id !== id);
-    response.status(204).end();
-  } else {
-    response.status(404).json({ status_code: 404, message: "Not Found" });
-  }
+  const person = { name: name, number: number };
+
+  Person.findByIdAndUpdate(request.params.id, person, { new: true })
+    .then((updatedData) => {
+      response.json(updatedData);
+    })
+    .catch((error) => next(error));
+});
+
+app.delete("/api/persons/:id", (request, response, next) => {
+  Person.findByIdAndDelete(request.params.id)
+    .then((result) => {
+      response.status(204).end();
+    })
+    .catch((error) => next(error));
 });
 
 app.get("/api/info", (request, response) => {
@@ -79,6 +94,28 @@ app.get("/api/info", (request, response) => {
     );
   });
 });
+
+const unknownEndpoint = (request, response) => {
+  response.status(404).send({ error: "unknown endpoint" });
+};
+
+// handler of requests with unknown endpoint
+app.use(unknownEndpoint);
+
+const errorHandler = (error, request, response, next) => {
+  console.error(error.message);
+
+  if (error.name === "CastError") {
+    return response.status(400).send({ error: "malformatted id" });
+  }
+
+  return response.status(500).json({ error: "Internal Server Error" });
+
+  next(error);
+};
+
+// handler of requests with result to errors
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
