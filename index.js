@@ -46,17 +46,17 @@ app.post("/api/persons", (request, response) => {
     response.status(400).json({ error: "name is required." });
     return;
   }
-  if (persons.find((person) => person.name === name)) {
-    response.status(400).json({ error: "name must be unique." });
-    return;
-  }
-  const person = {
+  //   if (persons.find((person) => person.name === name)) {
+  //     response.status(400).json({ error: "name must be unique." });
+  //     return;
+  //   }
+  const person = new Person({
     name: name,
     number: number,
-    id: id,
-  };
-  persons.push(person);
-  response.status(201).json(person);
+  });
+  person.save().then((result) => {
+    response.status(201).json(result);
+  });
 });
 
 app.delete("/api/persons/:id", (request, response) => {
