@@ -73,12 +73,12 @@ app.delete("/api/persons/:id", (request, response) => {
 });
 
 app.get("/api/info", (request, response) => {
-  const count = persons.length;
-  const date = new Date();
-
-  console.log(count, date);
-
-  response.send(`<p>Phonebook has info for ${count} people.</p><p>${date}</p>`);
+  Person.find({}).then((people) => {
+    const date = new Date();
+    response.send(
+      `<p>Phonebook has info for ${people.length} people.</p><p>${date}</p>`
+    );
+  });
 });
 
 const PORT = process.env.PORT || 3001;
