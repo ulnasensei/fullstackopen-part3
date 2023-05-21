@@ -48,6 +48,19 @@ app.get("/api/persons/:id", (request, response) => {
 app.post("/api/persons", (request, response) => {
   const { name, number } = request.body;
   const id = getRandomID();
+  console.log(`POST ${name} - ${number}`);
+  if(!number){
+    response.status(400).json({error: "number is required."})
+    return;
+  }
+  if(!name){
+    response.status(400).json({error: "name is required."})
+    return;
+  }
+  if(persons.find(person => person.name === name)){
+    response.status(400).json({error: "name must be unique."})
+    return;
+  }
   const person = {
     name: name,
     number: number,
