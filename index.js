@@ -1,27 +1,23 @@
-require("dotenv").config();
-const express = require("express");
-const morgan = require("morgan");
-const cors = require("cors");
+require('dotenv').config();
+const express = require('express');
+const morgan = require('morgan');
+const cors = require('cors');
 const app = express();
-const Person = require("./models/person");
+const Person = require('./models/person');
 
-app.use(express.static("build"));
+app.use(express.static('build'));
 app.use(express.json());
 app.use(cors());
 
 // logger middleware
-morgan.token("body", function (req, res) {
+morgan.token('body', function (req) {
   return JSON.stringify(req.body);
 });
 app.use(
-  morgan(":method :url :status :res[content-length] - :response-time ms :body")
+  morgan(':method :url :status :res[content-length] - :response-time ms :body')
 );
 
-function getRandomID(max = 10000) {
-  return Math.floor(Math.random() * max);
-}
-
-app.get("/api/persons", (request, response, next) => {
+app.get('/api/persons', (_request, response, next) => {
   Person.find({})
     .then((people) => {
       response.json(people);
@@ -29,7 +25,7 @@ app.get("/api/persons", (request, response, next) => {
     .catch((error) => next(error));
 });
 
-app.get("/api/persons/:id", (request, response, next) => {
+app.get('/api/persons/:id', (request, response, next) => {
   const id = request.params.id;
   Person.findById(id)
     .then((person) => {
@@ -41,13 +37,13 @@ app.get("/api/persons/:id", (request, response, next) => {
     .catch((error) => next(error));
 });
 
-app.post("/api/persons", (request, response, next) => {
+app.post('/api/persons', (request, response, next) => {
   const { name, number } = request.body;
   if (!number) {
-    return response.status(400).json({ error: "number is required." });
+    return response.status(400).json({ error: 'number is required.' });
   }
   if (!name) {
-    return response.status(400).json({ error: "name is required." });
+    return response.status(400).json({ error: 'name is required.' });
   }
   const personObj = {
     name: name,
@@ -55,7 +51,7 @@ app.post("/api/persons", (request, response, next) => {
   };
   Person.find({ name: name }).then((result) => {
     if (result.length)
-      return response.status(400).json({ error: "name must be unique." });
+      return response.status(400).json({ error: 'name must be unique.' });
     const person = new Person(personObj);
     person
       .save()
@@ -66,7 +62,7 @@ app.post("/api/persons", (request, response, next) => {
   });
 });
 
-app.put("/api/persons/:id", (request, response, next) => {
+app.put('/api/persons/:id', (request, response, next) => {
   const { name, number } = request.body;
 
   const person = { name: name, number: number };
@@ -74,7 +70,7 @@ app.put("/api/persons/:id", (request, response, next) => {
   Person.findByIdAndUpdate(request.params.id, person, {
     new: true,
     runValidators: true,
-    context: "query",
+    context: 'query',
   })
     .then((updatedData) => {
       response.json(updatedData);
@@ -82,15 +78,15 @@ app.put("/api/persons/:id", (request, response, next) => {
     .catch((error) => next(error));
 });
 
-app.delete("/api/persons/:id", (request, response, next) => {
+app.delete('/api/persons/:id', (request, response, next) => {
   Person.findByIdAndDelete(request.params.id)
-    .then((result) => {
+    .then(() => {
       response.status(204).end();
     })
     .catch((error) => next(error));
 });
 
-app.get("/api/info", (request, response) => {
+app.get('/api/info', (_request, response) => {
   Person.find({}).then((people) => {
     const date = new Date();
     response.send(
@@ -99,24 +95,25 @@ app.get("/api/info", (request, response) => {
   });
 });
 
-const unknownEndpoint = (request, response) => {
-  response.status(404).send({ message: "unknown endpoint" });
+const unknownEndpoint = (_request, response) => {
+  response.status(404).send({ message: 'unknown endpoint' });
 };
 
 // handler of requests with unknown endpoint
 app.use(unknownEndpoint);
 
-const errorHandler = (error, request, response, next) => {
+const errorHandler = (error, _request, response, next) => {
   console.error(error.message);
 
-  if (error.name === "CastError") {
-    return response.status(400).json({ error: "malformatted id" });
-  } else if (error.name === "ValidationError") {
+  if (error.name === 'CastError') {
+    return response.status(400).json({ error: 'malformatted id' });
+  } else if (error.name === 'ValidationError') {
     return response.status(400).json({ error: error.message });
   }
 
-  return response.status(500).json({ error: "Internal Server Error" });
+  return response.status(500).json({ error: 'Internal Server Error' });
 
+  // eslint-disable-next-line no-unreachable
   next(error);
 };
 

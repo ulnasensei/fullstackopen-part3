@@ -1,7 +1,7 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 if (process.argv.length < 3) {
-  console.log("give password as argument");
+  console.log('give password as argument');
   process.exit(1);
 }
 
@@ -11,7 +11,7 @@ const number = process.argv[4];
 
 const url = `mongodb+srv://ulna:${password}@fullstackopen-part3.xfltv8r.mongodb.net/phonebook?retryWrites=true&w=majority`;
 
-mongoose.set("strictQuery", false);
+mongoose.set('strictQuery', false);
 mongoose.connect(url);
 
 const personSchema = new mongoose.Schema({
@@ -19,17 +19,17 @@ const personSchema = new mongoose.Schema({
   number: String,
 });
 
-const Person = mongoose.model("Person", personSchema);
+const Person = mongoose.model('Person', personSchema);
 
 if (process.argv.length === 3) {
   Person.find({}).then((result) => {
-    console.log("phonebook");
+    console.log('phonebook');
     result.forEach((person) => console.log(person.name, person.number));
     mongoose.connection.close();
     process.exit(0);
   });
 } else if (!name || !number) {
-  console.log("Name and number are required parameters.");
+  console.log('Name and number are required parameters.');
   process.exit(1);
 } else {
   const person = new Person({
@@ -37,7 +37,7 @@ if (process.argv.length === 3) {
     number: number,
   });
 
-  person.save().then((result) => {
+  person.save().then(() => {
     console.log(`added ${name} number ${number} to phonebook`);
     mongoose.connection.close();
   });
